@@ -121,4 +121,4 @@ Feel free to reach out for questions, feedback, or collaborations!
 ---
 
 # 📄 License
-Also read [License]([https://github.com/Artin-khodayari/Jarvis/blob/main/License](https://github.com/Artin-khodayari/Jarvis/tree/main?tab=MIT-1-ov-file)
+Also read [License](https://github.com/Artin-khodayari/Jarvis/tree/main?tab=MIT-1-ov-file)
