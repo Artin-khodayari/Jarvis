@@ -215,7 +215,7 @@ def ask_openrouter(prompt: str):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "mistralai/mistral-7b-instruct:free",
+        "model": "deepseek/deepseek-chat-v3.1",
         "messages": 
         [
             {
@@ -415,7 +415,6 @@ def start_listening():
     start_btn.config(state="disabled")
     listening_enabled = True
     set_status("Ready")
-    gui_log("Listening started. Speak a command.", "info")
     threading.Thread(target=jarvis_loop, daemon=True).start()
 
 def toggle_listening():
@@ -489,3 +488,4 @@ if __name__ == "__main__":
     gui_log("Jarvis is ready. Press “Start Listening”.", "info")
     gui_log("Say 'help me' or 'i need you' to know how to work with jarvis", "info")
     root.mainloop()
+
