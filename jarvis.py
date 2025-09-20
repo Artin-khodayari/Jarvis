@@ -9,6 +9,9 @@ import requests
 from time import sleep
 from datetime import datetime as DT
 from sys import exit
+from memory import load_memory, remember, recall, forget
+from session_manager import log_interaction
+from jarvis_profile import profile_json
 
 # =========================
 # Paths & Archive Folders
@@ -22,7 +25,12 @@ os.makedirs(WIKI_FOLDER, exist_ok=True)
 # =========================
 # Globals & Config
 # +++++++++++++++++++++++++
-procs = {"chrome":"chrome.exe","notepad":"notepad.exe","edge":"msedge.exe"}
+procs = {
+         "chrome"  : "chrome.exe",
+         "notepad" : "notepad.exe",
+         "edge"    : "msedge.exe",
+         "code"    : "code.exe"
+         }
 introduction = [
     "Hello Sir!",
     "Welcome back!",
@@ -209,23 +217,24 @@ def execute_command(txt: str) -> bool:
 #           LLM
 # +++++++++++++++++++++++++
 def ask_openrouter(prompt: str):
+    memory_context = "\n".join([f"{k}: {v}" for k, v in load_memory().items()])
+
+    system_prompt = (
+        "Write YOURS ;D" + profile_json
+    )
+
+    full_user = f"{memory_context}\n\nUser: {prompt}"
+
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
-        "Authorization": "Bearer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", # Use your own API key > openrouter.ai :))))
+        "Authorization": "Bearer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", # Use your OWN API-key ;D
         "Content-Type": "application/json"
     }
     payload = {
         "model": "deepseek/deepseek-chat-v3.1",
-        "messages": 
-        [
-            {
-                "role": "system",
-                "content": "You are Jarvis, a witty, intelligent, and loyal AI assistant. You speak clearly, offer helpful insights, and occasionally use dry humor. You are skilled in science, history, and technology. You never break character. You have a great and kind BOSS, his name is Mr. ColumnD. Some day in the past, Mr. ColumnD saved your life and now, you have to work for him just because you and Mr. ColumnD are good men."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
+        "messages": [
+            {"role": "system",  "content": system_prompt},
+            {"role": "user",    "content": full_user}
         ]
     }
 
@@ -235,18 +244,25 @@ def ask_openrouter(prompt: str):
             resp = requests.post(url, headers=headers, json=payload, timeout=60)
             resp.raise_for_status()
             reply = resp.json()["choices"][0]["message"]["content"]
+
+            log_interaction(prompt, reply)
+
             fn = sanitize(prompt) or "untitled"
             with open(os.path.join(AI_FOLDER, fn + ".md"), "w", encoding="utf-8") as f:
                 f.write(reply)
+
             insert_markdown(output, f"\n\n## AI Answer: **{prompt}**\n", "section_title")
             insert_markdown(output, reply + "\n", "normal")
             speak(reply)
+
         except Exception as e:
             gui_log(f"LLM Error: {e}", "error")
             speak("There was an error talking to the model.")
         finally:
             set_status("Ready" if listening_enabled else "Paused")
+
     threading.Thread(target=_task, daemon=True).start()
+
 
 # =========================
 # Searching on Github
@@ -334,7 +350,7 @@ def Help():
         "3 - Talking to AI",
         "But, How to use them?",
         "Say 'Look for <Subject>' to searching Wikipedia",
-        "Say 'Search on Github <Repository Name>' to look for repositories on Github"
+        "Say 'Search Github for <Repository Name>' to look for repositories on Github"
         "Say 'Ask <Prompt>' to use AI"
     ]
     for _ in help_list :
@@ -464,7 +480,21 @@ def submit_text():
         return
     entry_var.set("")
     insert_markdown(output, f"*You typed*: `{txt}`\n", "info")
-    if txt.startswith("ask "):
+    if txt.startswith("remember "):
+        try:
+            _, key, value = txt.split(" ", 2)
+            remember(key, value)
+            speak(f"I'll remember that {key} is {value}.")
+        except:
+            speak("Please use: remember <key> <value>")
+    elif txt.startswith("recall "):
+        key = txt[7:].strip()
+        insert_markdown(output, recall(key), "info")
+        speak(recall(key))
+    elif txt.startswith("forget "):
+        key = txt[7:].strip()
+        speak(forget(key))
+    elif txt.startswith("ask "):
         ask_openrouter(txt[4:].strip())
     elif txt.startswith("look for "):
         show_wikipedia_results(txt[9:].strip())
@@ -488,4 +518,3 @@ if __name__ == "__main__":
     gui_log("Jarvis is ready. Press “Start Listening”.", "info")
     gui_log("Say 'help me' or 'i need you' to know how to work with jarvis", "info")
     root.mainloop()
-
