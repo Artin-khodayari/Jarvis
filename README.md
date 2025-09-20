@@ -109,7 +109,12 @@ To contribute:
 6. Open a Pull Request
 
 ---
+# ⚠️ IMPORTANT Note!
+I have used ths [Website](https://openrouter.ai) to using DeepSeek3v1
+You can also use it;
+Free, Fun, Even better than DeepSeeks [Official Website](https://www.deepseek.com/) (for me)
 
+---
 # 🧑‍💻 About the Developer
 
 This project is made by [Artin khodayari](https://github.com/Artin-khodayari).
